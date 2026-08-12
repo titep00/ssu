@@ -148,6 +148,7 @@ body {
 .m-del { cursor: pointer; border-color: var(--danger) !important; color: var(--danger) !important; background: rgba(248,113,113,0.12) !important; }
 .m-del:hover { background: rgba(248,113,113,0.25) !important; }
 .m-3d { cursor:pointer; border:1px solid var(--accent) !important; color:var(--accent) !important; background:rgba(217,109,79,.08) !important; font-size:12px; padding:3px 12px; border-radius:999px; }
+.scenario-3d-link { border:0; background:transparent; color:var(--accent); font-size:11px; padding:0; }
 .prop3d-head { display:flex; justify-content:space-between; align-items:center; margin:22px 0 10px; }
 .prop3d-head b { display:block; font-size:17px; }
 .prop3d-head small { display:block; color:var(--muted); font-size:11px; margin-top:3px; }

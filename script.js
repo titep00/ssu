@@ -1078,7 +1078,7 @@ function renderGrid(list) {
           <p>${s.desc}</p>
           <div class="card-meta">
             <span>소품 ${allProps(s).length}종</span>
-            <span>↗ 세팅 가이드 열기</span>
+            <button class="scenario-3d-link" data-open-3d="${s.id}">⌗ 3D 배치</button>
           </div>
         </div>
       </article>`).join("")
@@ -1308,6 +1308,12 @@ function exportExcel() {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
 }
 els.grid.addEventListener("click", (e) => {
+  const three = e.target.closest("[data-open-3d]");
+  if (three) {
+    const setting = settings.find((s) => s.id === three.dataset.open3d);
+    if (setting) { openDetail(setting.id); setTimeout(() => openProp3d(setting), 0); }
+    return;
+  }
   const card = e.target.closest("[data-open]");
   if (card) openDetail(card.dataset.open);
 });
