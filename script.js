@@ -99,13 +99,13 @@ function openCompare(id){
   $("#compare-modal").hidden=false;
 }
 
-function updateBadges(){ $("#wish-count").textContent=state.wishlist.length; $("#cart-count").textContent=state.cart.reduce((a,c)=>a+c.qty,0); }
+function updateBadges(){const wish=$("#wish-count"),cart=$("#cart-count");if(wish)wish.textContent=state.wishlist.length;if(cart)cart.textContent=state.cart.reduce((a,c)=>a+c.qty,0)}
 function toggleWish(id){ const i=state.wishlist.indexOf(id); if(i<0){state.wishlist.push(id);toast("찜 목록에 담았어요")}else{state.wishlist.splice(i,1);toast("찜 목록에서 뺐어요")};saveState();updateBadges();renderProducts(); }
 function addCart(id){ const item=state.cart.find((c)=>c.id===id); if(item)item.qty++; else state.cart.push({id,qty:1}); saveState();updateBadges();renderCart();toast("장바구니에 담았어요"); }
 function changeQty(id,delta){const item=state.cart.find((c)=>c.id===id);if(!item)return;item.qty+=delta;if(item.qty<1)state.cart=state.cart.filter((c)=>c.id!==id);saveState();updateBadges();renderCart()}
 function cartTotal(){return state.cart.reduce((sum,c)=>{const p=getProduct(c.id);return sum+(p?p.lowest*c.qty:0)},0)}
 function renderCart(){
-  $("#cart-total").textContent=won(cartTotal());
+  if(!$("#cart-items"))return;if($("#cart-total"))$("#cart-total").textContent=won(cartTotal());
   $("#cart-items").innerHTML=state.cart.length?state.cart.map((c)=>{const p=getProduct(c.id);return `<div class="cart-row"><img src="${p.image}" alt="${p.name}"/><div><h4>${p.name}</h4><small>${p.seller} · ${won(p.lowest)}</small><div class="quantity"><button data-action="qty" data-id="${p.id}" data-delta="-1">−</button><span>${c.qty}</span><button data-action="qty" data-id="${p.id}" data-delta="1">＋</button></div></div><button class="remove-item" data-action="remove-cart" data-id="${p.id}">×</button></div>`}).join(""):"<div class='empty-state'>아직 담은 소품이 없어요.<br />마음에 드는 상품을 담아보세요.</div>";
 }
 function openCart(){renderCart();$("#cart-drawer").classList.add("open");$("#cart-drawer").setAttribute("aria-hidden","false");$("#drawer-backdrop").hidden=false}
