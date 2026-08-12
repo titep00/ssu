@@ -6,139 +6,40 @@
   <style>
     /* 기본 레이아웃 및 폰트 설정 */
     body { margin: 0; display: flex; height: 100vh; font-family: 'Malgun Gothic', sans-serif; }
-    
-    /* 좌측 사이드바 설정 (플렉스박스를 사용해 요소들을 세로로 정렬) */
-    #sidebar { 
-      width: 320px; 
-      background-color: #2c3e50; 
-      color: white; 
-      padding: 20px; 
-      box-sizing: border-box; 
-      display: flex; 
-      flex-direction: column; 
-    }
-    
-    /* 소품 리스트가 길어지면 스크롤이 생기도록 설정 */
+    #sidebar { width: 320px; background-color: #2c3e50; color: white; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
     #prop-list { flex-grow: 1; overflow-y: auto; margin-top: 20px; }
-    
-    /* 개별 소품 아이템 디자인 */
     .prop-item { background: #34495e; margin-bottom: 15px; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
     .prop-item:hover { background: #415b76; }
     .prop-price { color: #2ecc71; font-weight: bold; margin-top: 5px; }
-
-    /* 소품 추가 폼 영역 디자인 */
     .add-form { background: #1a252f; padding: 15px; border-radius: 8px; margin-top: 10px; }
     .add-form h3 { margin-top: 0; font-size: 16px; }
     .add-form input { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; border: none; border-radius: 4px; }
     .add-form button { width: 100%; padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
     .add-form button:hover { background: #c0392b; }
-
-    /* 우측 3D 캔버스 영역 */
     #canvas-container { flex-grow: 1; position: relative; }
   </style>
 </head>
 <body>
 
-  <!-- 좌측 UI 패널 -->
   <div id="sidebar">
     <h2>🎬 세트장 소품함</h2>
-    
-    <!-- 자바스크립트가 동적으로 리스트를 채워 넣을 빈 상자입니다 -->
     <div id="prop-list"></div>
-
-    <!-- 새로운 소품을 추가하는 폼 -->
     <div class="add-form">
       <h3>새 소품 추가하기</h3>
-      <input type="text" id="new-prop-name" placeholder="소품 이름 (예: 빈티지 카메라)">
-      <input type="number" id="new-prop-price" placeholder="일일 렌탈비 (예: 50000)">
+      <input type="text" id="new-prop-name" placeholder="소품 이름">
+      <input type="number" id="new-prop-price" placeholder="일일 렌탈비">
       <button onclick="addNewProp()">+ 리스트에 추가</button>
     </div>
   </div>
 
-  <!-- 우측 3D 캔버스 패널 -->
   <div id="canvas-container"></div>
 
-  <!-- Three.js 라이브러리 로드 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   
   <script>
     // ==========================================
-    // 1. 소품 데이터 및 UI 동적 렌더링 로직
-    // ==========================================
-
-    // 기본으로 들어있을 소품 데이터 배열입니다.
-    let propsData = [
-      { id: 1, name: '빈티지 가죽 소파', price: 150000 },
-      { id: 2, name: '원목 다이닝 테이블', price: 80000 }
-    ];
-
-    const propListElement = document.getElementById('prop-list');
-
-    // 배열의 데이터를 읽어와서 화면(HTML)에 그려주는 함수
-    function renderPropList() {
-      // 새로운 내용을 그리기 전에 기존 리스트를 깨끗하게 비웁니다.
-      propListElement.innerHTML = '';
-
-      // 배열에 있는 소품 개수만큼 반복하며 HTML 요소를 만듭니다.
-      propsData.forEach(prop => {
-        const propItem = document.createElement('div');
-        propItem.className = 'prop-item';
-        // 클릭 시 3D 씬에 추가하는 함수를 실행하도록 연결합니다.
-        propItem.onclick = () => addPropToScene(prop.name);
-
-        // 숫자 형태의 가격에 쉼표(,)를 넣어 예쁘게 표시합니다 (toLocaleString)
-        propItem.innerHTML = `
-          <h3>${prop.name}</h3>
-          <div class="prop-price">렌탈비: ₩${prop.price.toLocaleString()}/일</div>
-        `;
-
-        // 완성된 요소를 화면에 붙입니다.
-        propListElement.appendChild(propItem);
-      });
-    }
-
-    // 사용자가 입력한 정보를 바탕으로 새로운 소품을 추가하는 함수
-    function addNewProp() {
-      const nameInput = document.getElementById('new-prop-name');
-      const priceInput = document.getElementById('new-prop-price');
-
-      const name = nameInput.value.trim(); // 양끝 공백 제거
-      const price = parseInt(priceInput.value); // 입력받은 글자를 숫자로 변환
-
-      // 입력값이 비어있거나 가격이 숫자가 아니면 경고창을 띄웁니다.
-      if (!name || isNaN(price)) {
-        alert('소품 이름과 가격을 올바르게 입력해 주세요!');
-        return; // 함수를 여기서 중단합니다.
-      }
-
-      // 배열에 새 데이터를 밀어 넣습니다(push).
-      const newProp = {
-        id: Date.now(), // 고유한 ID값으로 현재 시간을 사용합니다.
-        name: name,
-        price: price
-      };
-      propsData.push(newProp);
-
-      // 다음 입력을 위해 입력창을 비워줍니다.
-      nameInput.value = '';
-      priceInput.value = '';
-
-      // 데이터가 추가되었으니 리스트를 다시 그려 화면을 갱신합니다.
-      renderPropList();
-    }
-
-    // 사이트가 처음 열릴 때 리스트를 한 번 그려줍니다.
-    renderPropList();
-
-    // 사용자가 리스트를 클릭했을 때 실행될 임시 3D 연결 함수
-    function addPropToScene(name) {
-      console.log(name + " 소품 3D 렌더링 요청됨.");
-      alert(`[테스트] 3D 화면에 '${name}' 을(를) 배치합니다!`);
-    }
-
-    // ==========================================
-    // 2. 3D 환경 설정 코드 (이전과 동일)
+    // 1. 3D 환경 설정 (이 부분이 먼저 실행되어야 scene이 준비됩니다)
     // ==========================================
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
@@ -172,6 +73,85 @@
       camera.updateProjectionMatrix();
       renderer.setSize(container.clientWidth, container.clientHeight);
     });
+
+    // ==========================================
+    // 2. 소품 데이터 및 UI 동적 렌더링 로직
+    // ==========================================
+    let propsData = [
+      { id: 1, name: '빈티지 가죽 소파', price: 150000 },
+      { id: 2, name: '원목 다이닝 테이블', price: 80000 }
+    ];
+
+    const propListElement = document.getElementById('prop-list');
+
+    function renderPropList() {
+      propListElement.innerHTML = '';
+      propsData.forEach(prop => {
+        const propItem = document.createElement('div');
+        propItem.className = 'prop-item';
+        
+        // 클릭 시 이제 알림창이 아닌 아래의 3D 생성 함수를 부릅니다.
+        propItem.onclick = () => addPropToScene(prop.name);
+
+        propItem.innerHTML = `
+          <h3>${prop.name}</h3>
+          <div class="prop-price">렌탈비: ₩${prop.price.toLocaleString()}/일</div>
+        `;
+        propListElement.appendChild(propItem);
+      });
+    }
+
+    function addNewProp() {
+      const nameInput = document.getElementById('new-prop-name');
+      const priceInput = document.getElementById('new-prop-price');
+      const name = nameInput.value.trim();
+      const price = parseInt(priceInput.value);
+
+      if (!name || isNaN(price)) {
+        alert('소품 이름과 가격을 올바르게 입력해 주세요!');
+        return; 
+      }
+
+      const newProp = { id: Date.now(), name: name, price: price };
+      propsData.push(newProp);
+      nameInput.value = '';
+      priceInput.value = '';
+      renderPropList();
+    }
+
+    renderPropList();
+
+    // ==========================================
+    // 3. (핵심) 클릭 시 3D 물체를 씬에 추가하는 함수
+    // ==========================================
+    function addPropToScene(name) {
+      // 1. 모양(Geometry): 가로, 세로, 깊이가 각각 1인 정육면체 생성
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+
+      // 2. 재질(Material): 물체들이 겹치지 않아 보이도록 랜덤 색상을 부여
+      const randomColor = Math.random() * 0xffffff;
+      const material = new THREE.MeshStandardMaterial({ color: randomColor });
+
+      // 3. 메쉬(Mesh): 모양과 재질을 결합
+      const propMesh = new THREE.Mesh(geometry, material);
+
+      // 4. 위치(Position) 설정: 물체가 한가운데 겹치지 않게 무작위 좌표 부여
+      // Math.random()은 0~1 사이의 숫자를 반환합니다. (-5 ~ 5 사이의 좌표 생성)
+      propMesh.position.x = (Math.random() - 0.5) * 10; 
+      
+      // y축(높이)은 0.5로 설정하여 바닥(그리드) 위에 딱 붙어 있도록 만듭니다. (큐브 높이가 1이므로 절반)
+      propMesh.position.y = 0.5; 
+      
+      propMesh.position.z = (Math.random() - 0.5) * 10;
+
+      // 나중에 선택하거나 지울 때를 대비해 물체에 이름을 달아둡니다.
+      propMesh.name = name;
+
+      // 5. 완성된 3D 물체를 화면(scene)에 추가합니다!
+      scene.add(propMesh);
+      
+      console.log(`'${name}' 3D 물체가 씬에 추가되었습니다.`);
+    }
   </script>
 </body>
 </html>
