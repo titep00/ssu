@@ -1,32 +1,177 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>세트위드 | 드라마 현장 세팅 워크스페이스</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <title>드라마 세트장 3D 시뮬레이터</title>
+  <style>
+    /* 기본 레이아웃 및 폰트 설정 */
+    body { margin: 0; display: flex; height: 100vh; font-family: 'Malgun Gothic', sans-serif; }
+    
+    /* 좌측 사이드바 설정 (플렉스박스를 사용해 요소들을 세로로 정렬) */
+    #sidebar { 
+      width: 320px; 
+      background-color: #2c3e50; 
+      color: white; 
+      padding: 20px; 
+      box-sizing: border-box; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    
+    /* 소품 리스트가 길어지면 스크롤이 생기도록 설정 */
+    #prop-list { flex-grow: 1; overflow-y: auto; margin-top: 20px; }
+    
+    /* 개별 소품 아이템 디자인 */
+    .prop-item { background: #34495e; margin-bottom: 15px; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .prop-item:hover { background: #415b76; }
+    .prop-price { color: #2ecc71; font-weight: bold; margin-top: 5px; }
+
+    /* 소품 추가 폼 영역 디자인 */
+    .add-form { background: #1a252f; padding: 15px; border-radius: 8px; margin-top: 10px; }
+    .add-form h3 { margin-top: 0; font-size: 16px; }
+    .add-form input { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; border: none; border-radius: 4px; }
+    .add-form button { width: 100%; padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .add-form button:hover { background: #c0392b; }
+
+    /* 우측 3D 캔버스 영역 */
+    #canvas-container { flex-grow: 1; position: relative; }
+  </style>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <a href="#dashboard" class="brand"><span class="brand-mark">✦</span><span>SETWITH<small>production workspace</small></span></a>
-      <div class="project-picker"><span class="mini-label">현재 프로젝트</span><select id="project-select"></select><button data-action="new-project">＋ 새 프로젝트</button></div>
-      <nav class="side-nav"><span class="nav-label">WORKSPACE</span><button class="active" data-view="dashboard">▦ <span>오늘 / 대시보드</span></button><button data-view="scenes">▤ <span>회차·씬</span><i id="scene-count">0</i></button><button data-view="set">⌗ <span>공간 세팅</span></button><button data-view="props">◈ <span>소품 라이브러리</span></button><button data-view="prep">✓ <span>소품 준비함</span><i id="prep-count">0</i></button><span class="nav-label second">ON SET</span><button data-view="field">◉ <span>현장 모드</span></button><button data-view="records">▧ <span>촬영 기록</span></button></nav>
-      <div class="sidebar-foot"><button data-action="export">⇩ 데이터 백업</button><small>브라우저에 자동 저장됩니다</small></div>
-    </aside>
 
-    <div class="main-shell">
-      <header class="topbar"><button class="mobile-nav" data-action="toggle-sidebar">☰</button><div><span class="top-kicker" id="top-project">DRAMA PROJECT</span><h1 id="view-title">오늘 촬영</h1></div><div class="top-actions"><label class="quick-search">⌕ <input id="quick-search" placeholder="씬·소품 빠른 검색" /></label><button class="round-button" data-action="toggle-theme">◐</button><button class="round-button" data-action="toggle-sidebar">☰</button></div></header>
-      <main id="app-content"></main>
+  <!-- 좌측 UI 패널 -->
+  <div id="sidebar">
+    <h2>🎬 세트장 소품함</h2>
+    
+    <!-- 자바스크립트가 동적으로 리스트를 채워 넣을 빈 상자입니다 -->
+    <div id="prop-list"></div>
+
+    <!-- 새로운 소품을 추가하는 폼 -->
+    <div class="add-form">
+      <h3>새 소품 추가하기</h3>
+      <input type="text" id="new-prop-name" placeholder="소품 이름 (예: 빈티지 카메라)">
+      <input type="number" id="new-prop-price" placeholder="일일 렌탈비 (예: 50000)">
+      <button onclick="addNewProp()">+ 리스트에 추가</button>
     </div>
   </div>
-  <div id="modal-root"></div><div id="toast" class="toast"></div>
-  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-  <script src="script.js"></script>
+
+  <!-- 우측 3D 캔버스 패널 -->
+  <div id="canvas-container"></div>
+
+  <!-- Three.js 라이브러리 로드 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  
+  <script>
+    // ==========================================
+    // 1. 소품 데이터 및 UI 동적 렌더링 로직
+    // ==========================================
+
+    // 기본으로 들어있을 소품 데이터 배열입니다.
+    let propsData = [
+      { id: 1, name: '빈티지 가죽 소파', price: 150000 },
+      { id: 2, name: '원목 다이닝 테이블', price: 80000 }
+    ];
+
+    const propListElement = document.getElementById('prop-list');
+
+    // 배열의 데이터를 읽어와서 화면(HTML)에 그려주는 함수
+    function renderPropList() {
+      // 새로운 내용을 그리기 전에 기존 리스트를 깨끗하게 비웁니다.
+      propListElement.innerHTML = '';
+
+      // 배열에 있는 소품 개수만큼 반복하며 HTML 요소를 만듭니다.
+      propsData.forEach(prop => {
+        const propItem = document.createElement('div');
+        propItem.className = 'prop-item';
+        // 클릭 시 3D 씬에 추가하는 함수를 실행하도록 연결합니다.
+        propItem.onclick = () => addPropToScene(prop.name);
+
+        // 숫자 형태의 가격에 쉼표(,)를 넣어 예쁘게 표시합니다 (toLocaleString)
+        propItem.innerHTML = `
+          <h3>${prop.name}</h3>
+          <div class="prop-price">렌탈비: ₩${prop.price.toLocaleString()}/일</div>
+        `;
+
+        // 완성된 요소를 화면에 붙입니다.
+        propListElement.appendChild(propItem);
+      });
+    }
+
+    // 사용자가 입력한 정보를 바탕으로 새로운 소품을 추가하는 함수
+    function addNewProp() {
+      const nameInput = document.getElementById('new-prop-name');
+      const priceInput = document.getElementById('new-prop-price');
+
+      const name = nameInput.value.trim(); // 양끝 공백 제거
+      const price = parseInt(priceInput.value); // 입력받은 글자를 숫자로 변환
+
+      // 입력값이 비어있거나 가격이 숫자가 아니면 경고창을 띄웁니다.
+      if (!name || isNaN(price)) {
+        alert('소품 이름과 가격을 올바르게 입력해 주세요!');
+        return; // 함수를 여기서 중단합니다.
+      }
+
+      // 배열에 새 데이터를 밀어 넣습니다(push).
+      const newProp = {
+        id: Date.now(), // 고유한 ID값으로 현재 시간을 사용합니다.
+        name: name,
+        price: price
+      };
+      propsData.push(newProp);
+
+      // 다음 입력을 위해 입력창을 비워줍니다.
+      nameInput.value = '';
+      priceInput.value = '';
+
+      // 데이터가 추가되었으니 리스트를 다시 그려 화면을 갱신합니다.
+      renderPropList();
+    }
+
+    // 사이트가 처음 열릴 때 리스트를 한 번 그려줍니다.
+    renderPropList();
+
+    // 사용자가 리스트를 클릭했을 때 실행될 임시 3D 연결 함수
+    function addPropToScene(name) {
+      console.log(name + " 소품 3D 렌더링 요청됨.");
+      alert(`[테스트] 3D 화면에 '${name}' 을(를) 배치합니다!`);
+    }
+
+    // ==========================================
+    // 2. 3D 환경 설정 코드 (이전과 동일)
+    // ==========================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf5f6fa); 
+
+    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 5, 10);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(10, 20, 10);
+    scene.add(dirLight);
+    scene.add(new THREE.GridHelper(20, 20, 0x888888, 0xcccccc));
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+  </script>
 </body>
 </html>
