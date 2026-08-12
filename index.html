@@ -1,157 +1,191 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>드라마 세트장 3D 시뮬레이터</title>
-  <style>
-    /* 기본 레이아웃 및 폰트 설정 */
-    body { margin: 0; display: flex; height: 100vh; font-family: 'Malgun Gothic', sans-serif; }
-    #sidebar { width: 320px; background-color: #2c3e50; color: white; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
-    #prop-list { flex-grow: 1; overflow-y: auto; margin-top: 20px; }
-    .prop-item { background: #34495e; margin-bottom: 15px; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-    .prop-item:hover { background: #415b76; }
-    .prop-price { color: #2ecc71; font-weight: bold; margin-top: 5px; }
-    .add-form { background: #1a252f; padding: 15px; border-radius: 8px; margin-top: 10px; }
-    .add-form h3 { margin-top: 0; font-size: 16px; }
-    .add-form input { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; border: none; border-radius: 4px; }
-    .add-form button { width: 100%; padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-    .add-form button:hover { background: #c0392b; }
-    #canvas-container { flex-grow: 1; position: relative; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>세트위드 — 드라마 현장 세팅 & 소품 추천</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="#" class="brand" data-nav="home">
+        <span class="brand-mark">🎬</span>
+        <span>세트위드 <em>SetWith</em></span>
+      </a>
+      <nav class="nav">
+        <a href="#" data-nav="explore">세팅 카테고리</a>
+        <a href="#" data-nav="tips">세팅 꿀팁</a>
+        <a href="#" id="api-link">최저가 API</a>
+        <a href="#" id="checklist-link" class="nav-cart">체크리스트 <span id="checklist-count" class="badge">0</span></a>
+      </nav>
+    </div>
+  </header>
 
-  <div id="sidebar">
-    <h2>🎬 세트장 소품함</h2>
-    <div id="prop-list"></div>
-    <div class="add-form">
-      <h3>새 소품 추가하기</h3>
-      <input type="text" id="new-prop-name" placeholder="소품 이름">
-      <input type="number" id="new-prop-price" placeholder="일일 렌탈비">
-      <button onclick="addNewProp()">+ 리스트에 추가</button>
+  <main>
+    <!-- HERO -->
+    <section id="home" class="hero">
+      <div class="container">
+        <p class="hero-eyebrow">DRAMA SET PROPS & SCENOGRAPHY</p>
+        <h1 class="hero-title">씬이 살아나는<br />현장 세팅 가이드</h1>
+        <p class="hero-sub">
+          시대·공간별 드라마 세트 세팅에 필요한 핵심 정보와
+          그에 맞는 소품을 한 번에 추천해 드립니다.
+        </p>
+        <div class="search-wrap">
+          <input id="search-input" type="search" placeholder="예: 병원, 레트로, 사무실, 카페 …" />
+          <button id="search-btn" class="btn btn-primary">검색</button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><b id="stat-settings">0</b><span>세팅 시나리오</span></div>
+          <div class="stat"><b id="stat-props">0</b><span>추천 소품</span></div>
+          <div class="stat"><b id="stat-tips">0</b><span>현장 꿀팁</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTING GRID -->
+    <section id="explore" class="section">
+      <div class="container">
+<div class="section-head section-head-row">
+        <div>
+          <h2>세팅 시나리오</h2>
+          <p>시대 배경과 공간 유형을 고르면 맞춤 소품을 추천해 드려요.</p>
+        </div>
+        <button class="btn btn-primary" id="add-setting-btn">＋ 세팅 추가</button>
+      </div>
+        <div id="setting-grid" class="grid"></div>
+      </div>
+    </section>
+
+    <!-- GENERAL TIPS -->
+    <section id="tips" class="section section-alt">
+      <div class="container">
+        <div class="section-head">
+          <h2>현장 세팅 꿀팁</h2>
+          <p>어느 배경이든 통하는 프로들의 노하우</p>
+        </div>
+        <div id="tips-grid" class="grid grid-tips"></div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="container">
+        <p>세트위드 SetWith — 드라마 현장 세팅 정보 & 소품 추천 가이드</p>
+        <p class="footer-note">실제 촬영 시에는 안전 규정과 소품 대여 업체 확인이 필요합니다.</p>
+      </div>
+    </footer>
+  </main>
+
+  <!-- DETAIL MODAL -->
+  <div id="detail" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <button class="modal-close" id="modal-close" aria-label="닫기">✕</button>
+      <div class="modal-body" id="modal-body"></div>
     </div>
   </div>
 
-  <div id="canvas-container"></div>
+  <!-- CHECKLIST DRAWER -->
+  <div id="checklist" class="drawer" hidden>
+    <div class="drawer-head">
+      <h2>내 소품 체크리스트</h2>
+      <button class="btn btn-ghost btn-sm" id="clear-checklist">비우기</button>
+      <button class="drawer-close" id="drawer-close" aria-label="닫기">✕</button>
+    </div>
+    <form id="custom-add-form" class="custom-add">
+      <input id="custom-name" type="text" placeholder="직접 추가할 소품 (예: 레드 거실 러그)" autocomplete="off" />
+      <div class="custom-row">
+        <input id="custom-price" type="number" min="0" step="100" placeholder="최저가 원(선택)" autocomplete="off" />
+        <input id="custom-platform" type="text" placeholder="플랫폼(선택)" autocomplete="off" />
+        <button type="submit" class="btn btn-primary btn-sm">추가</button>
+      </div>
+    </form>
+    <ul id="checklist-items" class="checklist-items"></ul>
+    <div class="drawer-foot">
+      <button class="btn btn-primary" id="print-checklist">인쇄 / PDF 저장</button>
+      <button class="btn btn-ghost" id="excel-save">📊 엑셀 저장 (사진 포함)</button>
+      <button class="btn btn-ghost" id="spreadsheet-save">CSV 저장 (구글 시트용)</button>
+    </div>
+  </div>
+  <!-- API SETTINGS MODAL -->
+  <div id="api-modal" class="modal-overlay" hidden>
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="api-title">
+      <button class="modal-close" id="api-close" aria-label="닫기">✕</button>
+      <div class="modal-body">
+        <div class="m-head">
+          <div class="m-thumb">🔑</div>
+          <h2 id="api-title">최저가 API 설정</h2>
+          <p class="m-sub">네이버 개발자센터(developers.naver.com)에서 무료로 발급받은<br />Client ID / Secret을 등록하면 플랫폼별 실시간 최저가와 제품 사진을 비교할 수 있어요.</p>
+        </div>
+        <form id="api-form">
+          <label class="field">네이버 Client ID
+            <input id="api-id" type="text" placeholder="예: AbCd_EfGh123456" autocomplete="off" />
+          </label>
+          <label class="field">네이버 Client Secret
+            <input id="api-secret" type="password" placeholder="예: XyZ9pQ00" autocomplete="off" />
+          </label>
+          <p class="help">키는 이 브라우저(localStorage)에만 저장되고 어디로도 전송되지 않습니다.</p>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">저장</button>
+            <button type="button" class="btn btn-ghost" id="api-clear">키 삭제</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  
-  <script>
-    // ==========================================
-    // 1. 3D 환경 설정 (이 부분이 먼저 실행되어야 scene이 준비됩니다)
-    // ==========================================
-    const container = document.getElementById('canvas-container');
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf5f6fa); 
+  <!-- ADD SETTING MODAL -->
+  <div id="add-modal" class="modal-overlay" hidden>
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="add-title">
+      <button class="modal-close" id="add-close" aria-label="닫기">✕</button>
+      <div class="modal-body">
+        <div class="m-head">
+          <span class="m-thumb" id="add-preview-emoji">🎬</span>
+          <h2 id="add-title">세팅 시나리오 추가</h2>
+          <p class="m-sub">입력 중인 내용은 오른쪽 아래 카드에 실시간 미리보기로 보여요. 저장하면 목록·검색·통계에 즉시 반영됩니다.</p>
+        </div>
+        <form id="add-form">
+          <label class="field">세팅 이름 (필수)
+            <input id="add-name" type="text" placeholder="예: 로펌 사무실, 해변 호텔" autocomplete="off" />
+          </label>
+          <label class="field">이모지
+            <input id="add-emoji" type="text" maxlength="4" placeholder="예: 🏛️" value="🎬" autocomplete="off" />
+          </label>
+          <label class="field">태그
+            <input id="add-tag" type="text" placeholder="예: 현대, 장르극, 시대극" autocomplete="off" />
+          </label>
+          <label class="field">한 줄 설명
+            <input id="add-desc" type="text" placeholder="예: 로비·회의실·개인실로 구성된 변호사 사무소" autocomplete="off" />
+          </label>
+          <label class="field">추천 소품 <span class="help-inline">한 줄당 “이름 | 필수·추천·선택 | 설명”</span>
+            <textarea id="add-props" rows="4" placeholder="브랜드 로고 머그 | 추천 | 미팅 장면&#10;대형 회의 테이블 | 필수 | …&#10;법전·판결문 더미 | 선택 | …"></textarea>
+          </label>
+          <label class="field">시대·공간 정보 <span class="help-inline">한 줄씩 입력</span>
+            <textarea id="add-info" rows="3" placeholder="선택 입력"></textarea>
+          </label>
+          <label class="field">현장 세팅 팁 <span class="help-inline">한 줄씩 입력</span>
+            <textarea id="add-tips" rows="3" placeholder="선택 입력"></textarea>
+          </label>
 
-    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 5, 10);
+          <div class="add-preview-head">실시간 미리보기</div>
+          <div id="add-preview" class="card" style="cursor:default"></div>
+          <div id="add-auto" class="auto-rec"></div>
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(renderer.domElement);
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">저장하기</button>
+            <button type="button" class="btn btn-ghost" id="add-cancel">취소</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(10, 20, 10);
-    scene.add(dirLight);
-    scene.add(new THREE.GridHelper(20, 20, 0x888888, 0xcccccc));
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
 
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    window.addEventListener('resize', () => {
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    });
-
-    // ==========================================
-    // 2. 소품 데이터 및 UI 동적 렌더링 로직
-    // ==========================================
-    let propsData = [
-      { id: 1, name: '빈티지 가죽 소파', price: 150000 },
-      { id: 2, name: '원목 다이닝 테이블', price: 80000 }
-    ];
-
-    const propListElement = document.getElementById('prop-list');
-
-    function renderPropList() {
-      propListElement.innerHTML = '';
-      propsData.forEach(prop => {
-        const propItem = document.createElement('div');
-        propItem.className = 'prop-item';
-        
-        // 클릭 시 이제 알림창이 아닌 아래의 3D 생성 함수를 부릅니다.
-        propItem.onclick = () => addPropToScene(prop.name);
-
-        propItem.innerHTML = `
-          <h3>${prop.name}</h3>
-          <div class="prop-price">렌탈비: ₩${prop.price.toLocaleString()}/일</div>
-        `;
-        propListElement.appendChild(propItem);
-      });
-    }
-
-    function addNewProp() {
-      const nameInput = document.getElementById('new-prop-name');
-      const priceInput = document.getElementById('new-prop-price');
-      const name = nameInput.value.trim();
-      const price = parseInt(priceInput.value);
-
-      if (!name || isNaN(price)) {
-        alert('소품 이름과 가격을 올바르게 입력해 주세요!');
-        return; 
-      }
-
-      const newProp = { id: Date.now(), name: name, price: price };
-      propsData.push(newProp);
-      nameInput.value = '';
-      priceInput.value = '';
-      renderPropList();
-    }
-
-    renderPropList();
-
-    // ==========================================
-    // 3. (핵심) 클릭 시 3D 물체를 씬에 추가하는 함수
-    // ==========================================
-    function addPropToScene(name) {
-      // 1. 모양(Geometry): 가로, 세로, 깊이가 각각 1인 정육면체 생성
-      const geometry = new THREE.BoxGeometry(1, 1, 1);
-
-      // 2. 재질(Material): 물체들이 겹치지 않아 보이도록 랜덤 색상을 부여
-      const randomColor = Math.random() * 0xffffff;
-      const material = new THREE.MeshStandardMaterial({ color: randomColor });
-
-      // 3. 메쉬(Mesh): 모양과 재질을 결합
-      const propMesh = new THREE.Mesh(geometry, material);
-
-      // 4. 위치(Position) 설정: 물체가 한가운데 겹치지 않게 무작위 좌표 부여
-      // Math.random()은 0~1 사이의 숫자를 반환합니다. (-5 ~ 5 사이의 좌표 생성)
-      propMesh.position.x = (Math.random() - 0.5) * 10; 
-      
-      // y축(높이)은 0.5로 설정하여 바닥(그리드) 위에 딱 붙어 있도록 만듭니다. (큐브 높이가 1이므로 절반)
-      propMesh.position.y = 0.5; 
-      
-      propMesh.position.z = (Math.random() - 0.5) * 10;
-
-      // 나중에 선택하거나 지울 때를 대비해 물체에 이름을 달아둡니다.
-      propMesh.name = name;
-
-      // 5. 완성된 3D 물체를 화면(scene)에 추가합니다!
-      scene.add(propMesh);
-      
-      console.log(`'${name}' 3D 물체가 씬에 추가되었습니다.`);
-    }
-  </script>
+  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
