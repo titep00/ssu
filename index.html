@@ -3,84 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>세트위드 | 공간을 먼저 보고, 직접 꾸미는 쇼핑몰</title>
+  <title>세트위드 | 드라마 현장 세팅 워크스페이스</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="logo" href="#home" data-route="home"><span class="logo-dot"></span>SETWITH <small>studio</small></a>
-      <nav class="main-nav" aria-label="주 메뉴">
-        <a href="#rooms" data-route="rooms">공간 둘러보기</a>
-        <a href="#shop" data-route="shop">소품 쇼핑</a>
-        <a href="#studio" data-route="studio">공간 꾸미기</a>
-        <a href="#compare" data-action="compare-last">가격 비교</a>
-      </nav>
-      <div class="header-tools">
-        <label class="header-search"><span>⌕</span><input id="global-search" type="search" placeholder="상품, 공간 검색" /></label>
-        <button class="icon-button" data-action="wishlist" aria-label="찜 목록">♡<b id="wish-count">0</b></button>
-        <button class="icon-button cart-button" data-action="cart" aria-label="장바구니">▢<b id="cart-count">0</b></button>
-        <button class="mobile-menu" data-action="menu" aria-label="메뉴">☰</button>
-      </div>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a href="#dashboard" class="brand"><span class="brand-mark">✦</span><span>SETWITH<small>production workspace</small></span></a>
+      <div class="project-picker"><span class="mini-label">현재 프로젝트</span><select id="project-select"></select><button data-action="new-project">＋ 새 프로젝트</button></div>
+      <nav class="side-nav"><span class="nav-label">WORKSPACE</span><button class="active" data-view="dashboard">▦ <span>오늘 / 대시보드</span></button><button data-view="scenes">▤ <span>회차·씬</span><i id="scene-count">0</i></button><button data-view="set">⌗ <span>공간 세팅</span></button><button data-view="props">◈ <span>소품 라이브러리</span></button><button data-view="prep">✓ <span>소품 준비함</span><i id="prep-count">0</i></button><span class="nav-label second">ON SET</span><button data-view="field">◉ <span>현장 모드</span></button><button data-view="records">▧ <span>촬영 기록</span></button></nav>
+      <div class="sidebar-foot"><button data-action="export">⇩ 데이터 백업</button><small>브라우저에 자동 저장됩니다</small></div>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar"><button class="mobile-nav" data-action="toggle-sidebar">☰</button><div><span class="top-kicker" id="top-project">DRAMA PROJECT</span><h1 id="view-title">오늘 촬영</h1></div><div class="top-actions"><label class="quick-search">⌕ <input id="quick-search" placeholder="씬·소품 빠른 검색" /></label><button class="round-button" data-action="toggle-theme">◐</button><button class="round-button" data-action="toggle-sidebar">☰</button></div></header>
+      <main id="app-content"></main>
     </div>
-  </header>
-
-  <main>
-    <section id="home" class="hero-section">
-      <div class="hero-copy">
-        <p class="eyebrow">ROOMS · OBJECTS · YOUR STORY</p>
-        <h1>원하는 공간을 먼저 보고,<br /><em>마음에 드는 소품</em>으로 꾸며보세요.</h1>
-        <p class="hero-description">공간의 분위기를 발견하고, 그 안에 놓인 제품의 가격을 비교하고, 내 방에 직접 배치하는 새로운 인테리어 쇼핑 경험.</p>
-        <div class="hero-actions"><button class="button button-dark" data-route="rooms">공간 둘러보기 <span>↗</span></button><button class="text-button" data-route="studio">내 공간 만들기 <span>→</span></button></div>
-        <div class="hero-note"><span>✦</span> 실제 구매 전 가격과 재고를 판매처에서 다시 확인하세요.</div>
-      </div>
-      <div class="hero-visual">
-        <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=85" alt="따뜻한 분위기의 거실" />
-        <div class="hero-sticker">YOUR<br /><b>ROOM</b></div>
-        <div class="hero-caption"><span>01</span><b>Warm minimal living</b><small>서울, 18.4㎡</small></div>
-      </div>
-    </section>
-
-    <section id="rooms" class="page-section rooms-section">
-      <div class="section-heading"><div><p class="eyebrow">EXPLORE BY ROOM</p><h2>어떤 공간을<br /><em>꿈꾸고 있나요?</em></h2></div><p>공간을 먼저 선택하면 그 안에 사용된<br />제품과 예상 비용을 한눈에 볼 수 있어요.</p></div>
-      <div id="room-grid" class="room-grid"></div>
-    </section>
-
-    <section id="shop" class="page-section shop-section">
-      <div class="section-heading compact"><div><p class="eyebrow">SHOP OBJECTS</p><h2>공간을 완성하는 오브젝트</h2></div><button class="text-button" data-filter="all">전체 상품 보기 →</button></div>
-      <div class="shop-layout">
-        <aside class="filter-panel">
-          <div class="filter-top"><b>필터</b><button id="reset-filters">초기화</button></div>
-          <label class="filter-label">카테고리</label>
-          <div id="category-filters" class="filter-chips"></div>
-          <label class="filter-label">가격대</label>
-          <div class="filter-options"><label><input type="radio" name="price" value="all" checked /> 전체</label><label><input type="radio" name="price" value="under50" /> 5만원 이하</label><label><input type="radio" name="price" value="50to150" /> 5~15만원</label><label><input type="radio" name="price" value="over150" /> 15만원 이상</label></div>
-          <label class="filter-label">분위기</label>
-          <div id="mood-filters" class="filter-chips"></div>
-        </aside>
-        <div class="product-area"><div class="product-toolbar"><span id="product-result-count"></span><select id="sort-products"><option value="recommended">추천순</option><option value="low">낮은 가격순</option><option value="high">높은 가격순</option><option value="rating">평점순</option></select></div><div id="product-grid" class="product-grid"></div></div>
-      </div>
-    </section>
-
-    <section id="studio" class="page-section studio-section">
-      <div class="section-heading"><div><p class="eyebrow">MY ROOM STUDIO</p><h2>내 공간을<br /><em>직접 그려보세요.</em></h2></div><p>빈 방에 제품을 끌어다 놓고<br />완성된 분위기와 예상 금액을 확인하세요.</p></div>
-      <div class="studio-shell">
-        <aside class="studio-sidebar"><div class="studio-tabs"><button class="active" data-studio-tab="objects">소품</button><button data-studio-tab="templates">템플릿</button></div><div id="studio-library"></div></aside>
-        <div id="studio-canvas" class="studio-canvas"><div class="canvas-toolbar"><span id="canvas-room-name">나의 따뜻한 방</span><div><button data-action="mood" data-mood="day">☀</button><button data-action="mood" data-mood="warm">💡</button><button data-action="mood" data-mood="night">☾</button><button data-action="clear-canvas">↺</button></div></div><div id="placed-items" class="placed-items"><div class="canvas-hint">왼쪽 소품을 클릭하거나<br />이곳으로 끌어다 놓으세요</div></div></div>
-        <aside class="studio-inspector"><p class="eyebrow">MY SPACE</p><h3>나의 공간</h3><label>공간 이름<input id="space-name" value="나의 따뜻한 방" /></label><label>공간 크기<select id="space-size"><option>작은 방 · 8㎡</option><option selected>보통 방 · 14㎡</option><option>넓은 방 · 20㎡</option></select></label><div class="budget-box"><span>예상 총 금액</span><strong id="studio-total">₩0</strong><small id="studio-item-count">배치된 소품 0개</small></div><button class="button button-dark full" data-action="add-space-to-cart">전체 장바구니 담기</button><button class="button button-light full" data-action="save-space">공간 저장</button></aside>
-      </div>
-    </section>
-
-    <section class="statement-section"><p class="eyebrow">SETWITH NOTE</p><h2>좋은 공간은<br /><em>좋은 장면</em>을 만듭니다.</h2><p>드라마 속 한 장면처럼, 나만의 이야기가 머무는 공간을 만들어보세요.</p></section>
-  </main>
-
-  <div id="room-modal" class="overlay" hidden><div class="room-detail modal-card"><button class="modal-close" data-action="close-modal">×</button><div id="room-detail-content"></div></div></div>
-  <div id="compare-modal" class="overlay" hidden><div class="compare-card modal-card"><button class="modal-close" data-action="close-modal">×</button><div id="compare-content"></div></div></div>
-  <aside id="cart-drawer" class="cart-drawer" aria-hidden="true"><div class="drawer-head"><div><p class="eyebrow">YOUR LIST</p><h2>내가 담은 소품</h2></div><button class="modal-close" data-action="close-cart">×</button></div><div id="cart-items" class="cart-items"></div><div class="cart-footer"><div><span>선택한 상품 총액</span><strong id="cart-total">₩0</strong></div><button class="button button-dark full" data-route="studio">공간에 배치하기</button></div></aside><div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
-  <div id="toast" class="toast" role="status"></div>
+  </div>
+  <div id="modal-root"></div><div id="toast" class="toast"></div>
   <script src="script.js"></script>
 </body>
 </html>
