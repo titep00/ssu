@@ -12,6 +12,7 @@ import type { ChartHandle } from "@/components/ChartView";
 import { DataTable } from "@/components/student/DataTable";
 import { Segmented } from "@/components/student/Segmented";
 import { SubmissionsPanel } from "@/components/student/SubmissionsPanel";
+import { LoginCard } from "@/components/student/LoginCard";
 import {
   BarChartIcon,
   LineChartIcon,
@@ -78,8 +79,6 @@ async function readError(res: Response): Promise<string> {
 }
 
 export default function StudentPage() {
-  const router = useRouter();
-
   const [student, setStudent] = useState<Student | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -90,22 +89,18 @@ export default function StudentPage() {
         const res = await fetch("/api/student/me");
         const data = (await res.json()) as { student: Student | null };
         if (cancelled) return;
-        if (!data.student) {
-          router.replace("/");
-          return;
-        }
         setStudent(data.student);
         setAuthChecked(true);
       } catch {
-        if (!cancelled) router.replace("/");
+        if (!cancelled) setAuthChecked(true);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, []);
 
-  if (!authChecked || !student) {
+  if (!authChecked) {
     return (
       <main className="grid min-h-dvh place-items-center bg-zinc-50 px-5">
         <div className="flex flex-col items-center gap-3 text-zinc-500">
@@ -117,6 +112,10 @@ export default function StudentPage() {
         </div>
       </main>
     );
+  }
+
+  if (!student) {
+    return <LoginCard onSuccess={setStudent} />;
   }
 
   return <Workspace student={student} />;
