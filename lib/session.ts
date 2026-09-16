@@ -21,9 +21,9 @@ export type Session = StudentSession | AdminSession;
 
 function getKey(): Uint8Array {
   const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 16) {
+  if (!secret || secret.length < 8) {
     throw new Error(
-      "SESSION_SECRET 환경변수가 없거나 너무 짧습니다(16자 이상). .env.local 또는 Vercel 설정에 넣어주세요.",
+      "SESSION_SECRET 환경변수가 없거나 너무 짧습니다(8자 이상). .env.local 또는 Vercel 설정에 넣어주세요.",
     );
   }
   return new TextEncoder().encode(secret);
